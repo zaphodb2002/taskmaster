@@ -1,27 +1,9 @@
-use serde::{Deserialize, Serialize};
 use serde_json::{Result, Value};
 use time::{PrimitiveDateTime, Time, Date, Month};
-use time::macros::{date,time};
 use substring::Substring;
+use crate::Task;
 
-pub const EXAMPLE :&str = r#"
-    {
-        "description":"AM Check-In",
-        "due":"20230821T160000Z",
-        "entry":"20230822T183835Z",
-        "mask":"++++++++++++++++++W",
-        "modified":"20230907T193905Z",
-        "project":"LMS.Process",
-        "recur":"1d",
-        "rtype":"periodic",
-        "status":"recurring",
-        "uuid":"1e0b95c1-c9e7-49e7-9363-aaa62c17623a",
-        "wait":"20231005T155005Z",
-        "tags":["am","daily"]
-    }
-    "#;
-
-pub fn parse(data :String) -> Option<Task> {
+pub fn parse(data :&str) -> Option<Task> {
     if data == "null" || data.substring(0,1) != "{" { return None; }
     let v :Value = parse_raw(&data.trim()).unwrap_or_else(|_| panic!("bad task format :{}",&data));
     let due_parsed = parse_datetime(v["due"].to_string());
@@ -43,7 +25,7 @@ pub fn parse(data :String) -> Option<Task> {
         status: v["status"].to_string(),
         uuid: v["uuid"].to_string(),
         wait: wait_parsed,
-        tags: tags_parsed,
+        tags: tags_parsed
     };
     Some(result)
 }
@@ -88,22 +70,5 @@ fn parse_tags(data :&str) -> Vec<String> {
 pub fn parse_raw(data :&str) -> Result<Value> {
     let v: Value = serde_json::from_str(data)?;
     Ok(v)
-}
-
-#[derive(Serialize,Deserialize,Debug)]
-pub struct Task {
-    description :String,
-    due :Option<PrimitiveDateTime>,
-    entry :Option<PrimitiveDateTime>,
-    mask :String,
-    modified :Option<PrimitiveDateTime>,
-    project :String,
-    recur :String,
-    rtype :String,
-    status: String,
-    uuid :String,
-    wait :Option<PrimitiveDateTime>,
-    tags :Vec<String>,
-
 }
 

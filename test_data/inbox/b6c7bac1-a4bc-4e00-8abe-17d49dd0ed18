@@ -1,0 +1,1 @@
+{"description":"Pick up meds from CVS","due":"20230828T160000Z","entry":"20230822T232247Z","mask":"+++W","modified":"20231027T160029Z","priority":"M","project":"Subsistence.Medication","recur":"1mo","rtype":"periodic","status":"recurring","uuid":"b6c7bac1-a4bc-4e00-8abe-17d49dd0ed18","wait":"20230801T070000Z","tags":["adhd","monthly","task"]}

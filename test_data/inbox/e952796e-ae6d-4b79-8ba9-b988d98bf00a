@@ -1,0 +1,1 @@
+{"description":"Check batteries on irrigation timer","due":"20230901T065959Z","entry":"20230823T164452Z","mask":"+++-","modified":"20231031T144529Z","priority":"M","project":"Protection.Maintenance","recur":"1mo","rtype":"periodic","status":"recurring","uuid":"e952796e-ae6d-4b79-8ba9-b988d98bf00a","wait":"20230801T070000Z","tags":["monthly"]}

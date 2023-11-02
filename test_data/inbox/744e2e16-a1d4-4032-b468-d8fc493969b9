@@ -1,0 +1,1 @@
+{"description":"Audit TaskWarrior reports","due":"20230828T160000Z","entry":"20231002T175122Z","mask":"-XX-","modified":"20231031T032636Z","priority":"M","project":"LMS.Process.Auditing","recur":"1mo","rtype":"periodic","status":"recurring","uuid":"744e2e16-a1d4-4032-b468-d8fc493969b9","wait":"20230731T140000Z","tags":["am","audit","monthly","task"]}

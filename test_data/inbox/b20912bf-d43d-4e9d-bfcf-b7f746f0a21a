@@ -1,0 +1,1 @@
+{"description":"Audit Subsistence.Food recurring tasks","due":"20230828T160000Z","entry":"20230824T154330Z","mask":"+X+-","modified":"20231027T205332Z","priority":"M","project":"LMS.Process.Auditing","recur":"1mo","rtype":"periodic","status":"recurring","uuid":"b20912bf-d43d-4e9d-bfcf-b7f746f0a21a","wait":"20230731T140000Z","tags":["am","audit","monthly","task"]}

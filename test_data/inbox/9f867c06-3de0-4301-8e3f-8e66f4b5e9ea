@@ -1,0 +1,1 @@
+{"description":"Check batteries on irrigation timer","due":"20231130T065900Z","entry":"20231031T144529Z","imask":3.000000,"modified":"20231025T010527Z","parent":"e952796e-ae6d-4b79-8ba9-b988d98bf00a","priority":"M","project":"Protection.Maintenance","recur":"1mo","rtype":"periodic","status":"pending","uuid":"9f867c06-3de0-4301-8e3f-8e66f4b5e9ea","tags":["monthly"]}

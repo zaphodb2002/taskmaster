@@ -1,0 +1,1 @@
+{"description":"Audit LMS recurring tasks","due":"20231126T160000Z","entry":"20231102T162224Z","imask":3,"modified":"20231102T162212Z","parent":"ef6545a6-37eb-4ff7-aa4c-42dd96fa5e41","project":"LMS.Process.Auditing","recur":"1mo","rtype":"periodic","status":"pending","uuid":"6ecbff4a-986b-4f04-8912-d698b8e7f601","wait":"20231126T140000Z"}
