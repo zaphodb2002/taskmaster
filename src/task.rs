@@ -1,4 +1,5 @@
 use time::PrimitiveDateTime;
+use std::fs;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize,Deserialize,Debug)]
@@ -8,7 +9,7 @@ pub struct Task {
     pub(crate) entry :Option<PrimitiveDateTime>,
     pub(crate) mask :String,
     pub(crate) modified :Option<PrimitiveDateTime>,
-    pub(crate) project :String,
+    pub(crate) project :Vec<String>,
     pub(crate) recur :String,
     pub(crate) rtype :String,
     pub(crate) status: String,
@@ -17,6 +18,29 @@ pub struct Task {
     pub(crate) tags :Vec<String>,
 
 }
+impl Task {
+    pub(crate) fn write(&self) -> () {
+        let folderpath = &self.create_folder();
+        let fullpath = folderpath.to_owned() + &self.uuid + ".json";
+        let json = serde_json::to_string(&self).unwrap();
+        fs::write(fullpath, json);
+        
+   }
+    fn create_folder(&self) -> String {
+        let mut builder = fs::DirBuilder::new();
+        builder.recursive(true);
+        
+        let mut path = "./pages/".to_string();
+        for level in &self.project {
+            path += level;
+            path += "/";
+        }
+        builder.create(path.clone()).unwrap();
+
+        path
+    }
+}
+
 
 pub const EXAMPLE_0 :&str = r#"
     {
@@ -55,3 +79,6 @@ pub const EXAMPLE_1 :&str = r#"
 
 
 // TODO: implement new()
+// TODO: implement get_by_uuid()
+// TODO: implement modify()
+// TODO: implement 

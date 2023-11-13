@@ -35,28 +35,29 @@
 
 use std::io;
 use std::fs;
+use std::path::Path;
 use std::env;
-use crate::{taskpool::TaskPool, task::Task};
+use crate::task::Task;
 
 
 mod parser;
 mod task;
-mod taskpool;
+mod command;
 
-
-const TASK_COMPLETION_THRESHOLD_HIGH :f64 = 0.9;
-const TASK_COMPLETION_THRESHOLD_LOW :f64 = 0.5;
+//const TASK_COMPLETION_THRESHOLD_HIGH :f64 = 0.9;
+//const TASK_COMPLETION_THRESHOLD_LOW :f64 = 0.5;
 
 fn main() -> io::Result<()>{
-    let vec = vec![];
-    let mut taskpool :TaskPool= TaskPool(vec);
+    let mut taskpool :Vec<Task> = Vec::new();
 
-
-    run_tests();
+    run_tests(&taskpool);
 
     let args :Vec<String> = env::args().collect();
-    let tmp_cmd = args[1].to_lowercase();
-    let command = tmp_cmd.as_str();
+    let mut temp_cmd = "help";
+    if args.len() > 1 {
+        temp_cmd = &args[1];
+    }
+    let command = temp_cmd;
     
     let mut params :Vec<&str> = Vec::new();
     for i in 2..args.len() {
@@ -68,48 +69,80 @@ fn main() -> io::Result<()>{
 //        "remove" => println!("Command 'REMOVE' is not yet implemented."),
 //        "modify" => println!("Command 'MODIFY' is not yet implemented."),
 //        "report" => println!("Command 'REPORT' is not yet implemented."),
-        "import" => cmd_import(params),
+        "import" => cmd_import(vec![TEST_DATA_PATH_STR], taskpool),
 //        "export" => println!("Command 'EXPORT' is not yet implemented."),
-//        "help" => println!("Command 'HELP' is not yet implemented."),
-        "version" => cmd_version(params),
-        _ => cmd_not_recognized(params),
+        //"help" => cmd_help(params),
+        //"version" => cmd_version(params),
+        _ => panic!(),//cmd_not_recognized(params),
     };
-    
-    dbg!(result);
-
-    //let file = "/home/zaphod/export.data";
-    //let raw = fs::read_to_string(file)?;
-    //let split = raw.split('\n');
-    //let mut tasks :Vec<Task> = Vec::new();
-    //for line in split {
-    //    let opt = parser::parse(line.to_string());
-    //    if opt.is_some(){
-    //        tasks.push(opt.unwrap());
-    //    }
-    //}
-
     Ok(())
 }
 
-/// Command: Import
-/// &str -> Result<Vec<&str>>
-/// processes a given list of filepaths (recursively if directory) and imports any valid task jsons into our
-/// local data structure.  returns a Vec of task uuids that were successfully imported into the
-/// data structure.
-
 const TEST_DATA_PATH_STR :&str = "./test_data/";
-fn tests_cmd_import(){
-    let correct_vec :Vec<&str> = Vec::new();
-    assert_eq!(cmd_import([TEST_DATA_PATH_STR].to_vec()), Ok(correct_vec));
+
+/// Command: Import
+/// &str -> Result<Vec<Task>>
+/// processes a given list of filepaths (recursively if directory) and imports any valid task jsons into our
+/// local data structure, and returns said data structure
+fn tests_cmd_import(taskpool :&Vec<Task>){
+    let correct_vec :Vec<Task> = Vec::new();
+   // assert_eq!(cmd_import([TEST_DATA_PATH_STR].to_vec(), taskpool).unwrap(), correct_vec);
 }
 
-fn cmd_import(params :Vec<&str>) -> Result<Vec<&str>,&str> {
-    let mut result :Vec<&str> = Vec::new();
-    for param in params {
-        let parsed :Option<Task> = parser::parse(param);
+fn cmd_import(paths :Vec<&str>, mut taskpool :Vec<Task>) -> Result<Vec<Task>, &str> {
+    for path in paths {
+        let jsons = load_jsons(path);
+        let jsons = jsons.unwrap();
+        let tasks = read_tasks_from_json(jsons);
+        for task in tasks.unwrap() {
+            taskpool.push(task);
+        }
+    }
+    write_tasks_to_files(&taskpool);
+    Ok(taskpool)
+}
 
-    };
+fn write_tasks_to_files(tasks :&Vec<Task>) -> Result<Vec<Task>,&'static str>{
+    let mut result = Vec::new();
+    for task in tasks {
+        task.write();
+    }
+    Ok(result)
+}
 
+/// &str -> Result<Vec<&str>>
+/// interp path as path to json files, outputs Vec of json strings
+fn load_jsons(path :&str) -> Result<Vec<String>,&str>{
+    let fixed_path = Path::new(path);
+    let mut result :Vec<String>= Vec::new();
+    if fixed_path.is_dir() {
+        for file in fs::read_dir(fixed_path).unwrap() {
+            let file = file.unwrap();
+            let path = file.path();
+            if path.is_dir() {
+                for file in fs::read_dir(path).unwrap() {
+                    let file = file.unwrap();
+                    let path = file.path();
+                    if path.is_file() {
+                        let json = fs::read_to_string(path);
+                        let json = json.unwrap();
+                        //dbg!(&json);
+                        result.push(json);
+                    }
+                }
+            }
+        }
+    }
+    Ok(result)
+}
+
+fn read_tasks_from_json<'a>(jsons :Vec<String>) -> Result<Vec<Task>, &'a str> {
+    let mut result :Vec<Task> = Vec::new();
+    for json in jsons {
+        let task = parser::parse(&json);
+        let task = task.unwrap();
+        result.push(task);
+    }
     Ok(result)
 }
 
@@ -121,7 +154,7 @@ fn tests_cmd_version(){
     assert_eq!(cmd_version([TEST_DATA_PATH_STR].to_vec()), Ok(correct_vec));
 }
 
-fn cmd_version(param :Vec<&str>) -> Result<Vec<&str>,&str> {
+fn cmd_version(_param :Vec<&str>) -> Result<Vec<&str>,&str> {
     let result :Vec<&str> = vec![VERSION_STR]; 
     Ok(result)
 }
@@ -132,13 +165,26 @@ fn tests_cmd_not_recognized(){
     assert_eq!(cmd_not_recognized([TEST_DATA_PATH_STR].to_vec()), Ok(correct_vec));
 }
 
-fn cmd_not_recognized(param :Vec<&str>) -> Result<Vec<&str>,&str> {
+fn cmd_not_recognized(_param :Vec<&str>) -> Result<Vec<&str>,&str> {
     let result :Vec<&str> = vec![NOT_RECOGNIZED_STR]; 
     Ok(result)
 }
 
-fn run_tests(){
-    tests_cmd_import();
+// Command: Help
+const HELP_STR :&str = "This is the help file.";
+fn tests_cmd_help(){
+    let correct_vec :Vec<&str> = vec![HELP_STR];
+    assert_eq!(cmd_help([TEST_DATA_PATH_STR].to_vec()), Ok(correct_vec));
+}
+
+fn cmd_help(_params :Vec<&str>) -> Result<Vec<&str>,&str> {
+    let result :Vec<&str> = vec![HELP_STR];
+    Ok(result)
+}
+
+fn run_tests(taskpool :&Vec<Task>){
+    tests_cmd_import(&taskpool);
     tests_cmd_version();
     tests_cmd_not_recognized();
+    tests_cmd_help();
 }

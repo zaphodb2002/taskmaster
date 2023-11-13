@@ -10,7 +10,8 @@ pub fn parse(data :&str) -> Option<Task> {
     let entry_parsed = parse_datetime(v["entry"].to_string());
     let modified_parsed = parse_datetime(v["modified"].to_string());
     let wait_parsed = parse_datetime(v["wait"].to_string());
-
+    let uuid_parsed = parse_uuid(&v["uuid"].to_string());
+    let project_parsed = parse_project(&v["project"].to_string());
     let tags_parsed = parse_tags(&v["tags"].to_string());
 
     let result = Task {
@@ -19,11 +20,11 @@ pub fn parse(data :&str) -> Option<Task> {
         entry: entry_parsed,
         mask: v["mask"].to_string(),
         modified: modified_parsed,
-        project: v["project"].to_string(),
+        project: project_parsed,
         recur: v["recur"].to_string(),
         rtype: v["periodic"].to_string(),
         status: v["status"].to_string(),
-        uuid: v["uuid"].to_string(),
+        uuid: uuid_parsed,
         wait: wait_parsed,
         tags: tags_parsed
     };
@@ -67,8 +68,23 @@ fn parse_tags(data :&str) -> Vec<String> {
     return result;
 }
 
-pub fn parse_raw(data :&str) -> Result<Value> {
+fn parse_raw(data :&str) -> Result<Value> {
     let v: Value = serde_json::from_str(data)?;
     Ok(v)
 }
 
+fn parse_uuid(data :&str) -> String {
+    let mut data = data.to_lowercase();
+    data = data.replace("\"", "");
+    return data;
+}
+
+fn parse_project(data :&str) -> Vec<String> {
+    let data = data.split(".");
+    let mut result :Vec<String> = Vec::new();
+    for str in data {
+        let str = str.replace("\"", "");
+        result.push(str.to_string())
+    }
+    result
+}
