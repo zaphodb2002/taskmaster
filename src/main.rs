@@ -48,7 +48,7 @@ mod command;
 //const TASK_COMPLETION_THRESHOLD_LOW :f64 = 0.5;
 
 fn main() -> io::Result<()>{
-    let mut taskpool :Vec<Task> = Vec::new();
+    let taskpool :Vec<Task> = Vec::new();
 
     run_tests(&taskpool);
 
@@ -64,7 +64,7 @@ fn main() -> io::Result<()>{
         params.push(&args[i]);
     }
        
-    let result = match command {
+    let _result = match command {
 //        "add" => println!("Command 'ADD' is not yet implemented."),
 //        "remove" => println!("Command 'REMOVE' is not yet implemented."),
 //        "modify" => println!("Command 'MODIFY' is not yet implemented."),
@@ -84,8 +84,8 @@ const TEST_DATA_PATH_STR :&str = "./test_data/";
 /// &str -> Result<Vec<Task>>
 /// processes a given list of filepaths (recursively if directory) and imports any valid task jsons into our
 /// local data structure, and returns said data structure
-fn tests_cmd_import(taskpool :&Vec<Task>){
-    let correct_vec :Vec<Task> = Vec::new();
+fn tests_cmd_import(_taskpool :&Vec<Task>){
+    let _correct_vec :Vec<Task> = Vec::new();
    // assert_eq!(cmd_import([TEST_DATA_PATH_STR].to_vec(), taskpool).unwrap(), correct_vec);
 }
 
@@ -103,7 +103,7 @@ fn cmd_import(paths :Vec<&str>, mut taskpool :Vec<Task>) -> Result<Vec<Task>, &s
 }
 
 fn write_tasks_to_files(tasks :&Vec<Task>) -> Result<Vec<Task>,&'static str>{
-    let mut result = Vec::new();
+    let result = Vec::new();
     for task in tasks {
         task.write();
     }
