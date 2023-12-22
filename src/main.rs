@@ -97,19 +97,49 @@ fn cmd_report(params :Vec<&str>) -> CommandResult {
     
     let mut filtered_tasks :Vec<Task>= Vec::new();
     
-    for task in tasks.clone() {
-       if task.project.contains(&"Subsistence".to_string()){
-           if task.end == None {
-                filtered_tasks.push(task);
-           }
-       }
+    let report = match params[0] {
+        "progress" => params[0],
+        "project" => params[0],
+        "gtd" => params[0],
+        _ => "Report not Recognized"
+    };
+
+    if report == "progress" {
+        
     }
 
-    dbg!(filtered_tasks.len());
+    else if report == "project" {
+        if params.len() > 1 {
+
+            let project = match params[1] {
+                "lms" => "LMS".to_string(),
+                "subsistence" => "Subsistence".to_string(),
+                _ => "Project not recognized".to_string(),
+            };
+
+            filtered_tasks.append(&mut get_tasks_by_project(project, &tasks));
+
+            dbg!(filtered_tasks.len());
+        }
+        else {
+            text = "No project specified".to_string();
+        }
+            
+    }
+
+    else if report == "gtd" {
+        
+    }
+
+
+    for task in filtered_tasks {
+        text += &task.format_for_report();
+        text += "\n";
+    }
 
     let result = CommandResult {
         tasks: tasks,
-        text
+        text: text
     };
 
     result
@@ -120,6 +150,21 @@ fn get_tasks_from_local() -> Vec<Task> {
     let tasks = read_tasks_from_json(jsons).unwrap();
     tasks
 }
+
+fn get_tasks_by_project(project :String, tasks:&Vec<Task>) -> Vec<Task> {
+    let mut result :Vec<Task> = Vec::new();
+    for task in tasks {
+        dbg!(&task.project);
+        if task.project.contains(&project) {
+            
+            result.push(task.clone());
+        }
+    }
+
+    dbg!(result.len());
+    result
+}
+
 
 /// Command: Import
 /// &str -> CommandResult

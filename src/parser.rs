@@ -14,20 +14,26 @@ pub fn parse(data :&str) -> Option<Task> {
     let project_parsed = parse_project(&v["project"].to_string());
     let tags_parsed = parse_tags(&v["tags"].to_string());
     let end_parsed = parse_datetime(v["end"].to_string());
+    let scheduled_parsed = parse_datetime(v["scheduled"].to_string());
+    let start_parsed = parse_datetime(v["start"].to_string());
+    let until_parsed = parse_datetime(v["until"].to_string());
 
     let result = Task {
+        uuid: uuid_parsed,
         description: v["description"].to_string(),
-        due: due_parsed,
-        entry: entry_parsed,
+        tags: tags_parsed,
         mask: v["mask"].to_string(),
         modified: modified_parsed,
         project: project_parsed,
         recur: v["recur"].to_string(),
         rtype: v["periodic"].to_string(),
         status: v["status"].to_string(),
-        uuid: uuid_parsed,
+        entry: entry_parsed,
         wait: wait_parsed,
-        tags: tags_parsed,
+        scheduled: scheduled_parsed,
+        start: start_parsed,
+        due: due_parsed,
+        until: until_parsed,
         end: end_parsed,
     };
     Some(result)

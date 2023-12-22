@@ -1,23 +1,28 @@
+use substring::Substring;
 use time::PrimitiveDateTime;
 use std::fs;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize,Deserialize,Debug,Clone)]
 pub struct Task {
+    pub(crate) uuid :String,
     pub(crate) description :String,
-    pub(crate) due :Option<PrimitiveDateTime>,
-    pub(crate) entry :Option<PrimitiveDateTime>,
+    pub(crate) tags :Vec<String>,
     pub(crate) mask :String,
     pub(crate) modified :Option<PrimitiveDateTime>,
     pub(crate) project :Vec<String>,
-    pub(crate) recur :String,
     pub(crate) rtype :String,
+    pub(crate) recur :String,
     pub(crate) status: String,
-    pub(crate) uuid :String,
+    pub(crate) entry :Option<PrimitiveDateTime>,
     pub(crate) wait :Option<PrimitiveDateTime>,
-    pub(crate) tags :Vec<String>,
+    pub(crate) scheduled:Option<PrimitiveDateTime>,
+    pub(crate) start : Option<PrimitiveDateTime>,
+    pub(crate) due :Option<PrimitiveDateTime>,
+    pub(crate) until :Option<PrimitiveDateTime>,
     pub(crate) end :Option<PrimitiveDateTime>,
 }
+
 impl Task {
     pub(crate) fn write(&self) -> () {
         let folderpath = &self.create_folder();
@@ -39,8 +44,58 @@ impl Task {
 
         path
     }
+
+
+    pub fn format_for_report(&self) -> String {
+
+        let uuid = &format_uuid(&self.uuid);
+        let description = &format_description(&self.description);
+        let status = &self.status;
+
+        let entry = &format_date(&self.entry);
+        let wait = &format_date(&self.wait);
+        //let scheduled = format_date(&self.scheduled);
+        //let start = &format_date*&self.start;
+        let due = &format_date(&self.due);
+        //let until = format_date(&self.until);
+        let end = &format_date(&self.end);
+
+        let mut result = String::new();
+        result += uuid;
+        result += REPORT_SEPARATOR;
+        result += description;
+        result += REPORT_SEPARATOR;
+        result += status;
+        result += REPORT_SEPARATOR;
+        result += entry;
+        result += REPORT_SEPARATOR;
+        result += wait;
+        result += REPORT_SEPARATOR;
+        result += due;
+        result += REPORT_SEPARATOR;
+        result += end;
+
+        result
+    }
 }
 
+const REPORT_SEPARATOR :&str = " | ";
+
+fn format_uuid(uuid :&str) -> String {
+    uuid.to_string().substring(0,8).to_string()
+}
+
+fn format_description(desc :&str) -> String {
+    desc.replace("\"", "").replace("\\", "")
+}
+
+fn format_date(date :&Option<PrimitiveDateTime>) -> String {
+    if date.is_none() {
+        return "No Data".to_string();
+    }
+    let date = date.unwrap();
+    date.to_string()
+}
 
 pub const EXAMPLE_0 :&str = r#"
     {
@@ -81,4 +136,3 @@ pub const EXAMPLE_1 :&str = r#"
 // TODO: implement new()
 // TODO: implement get_by_uuid()
 // TODO: implement modify()
-// TODO: implement 
