@@ -1,4 +1,6 @@
-enum Command {
+use crate::task::Task;
+
+pub enum Command {
     Add,
     Remove,
     Modify,
@@ -8,4 +10,25 @@ enum Command {
     Help,
     Version,
     NotRecognized,
+}
+
+impl Command {
+    pub(crate) fn from(str :String) -> Command {
+        match str.as_str() {
+            "add" => Command::Add,
+            "remove" => Command::Remove,
+            "modify" => Command::Modify,
+            "report" => Command::Report,
+            "import" => Command::Import,
+            "export" => Command::Export,
+            "help" => Command::Help,
+            "version" => Command::Version,
+            _ => Command::NotRecognized,
+        }
+    }
+}
+
+pub struct CommandResult {
+    pub tasks: Vec<Task>,
+    pub text: String
 }

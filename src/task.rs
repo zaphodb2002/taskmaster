@@ -2,7 +2,7 @@ use time::PrimitiveDateTime;
 use std::fs;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize,Deserialize,Debug)]
+#[derive(Serialize,Deserialize,Debug,Clone)]
 pub struct Task {
     pub(crate) description :String,
     pub(crate) due :Option<PrimitiveDateTime>,
@@ -16,7 +16,7 @@ pub struct Task {
     pub(crate) uuid :String,
     pub(crate) wait :Option<PrimitiveDateTime>,
     pub(crate) tags :Vec<String>,
-
+    pub(crate) end :Option<PrimitiveDateTime>,
 }
 impl Task {
     pub(crate) fn write(&self) -> () {

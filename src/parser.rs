@@ -13,6 +13,7 @@ pub fn parse(data :&str) -> Option<Task> {
     let uuid_parsed = parse_uuid(&v["uuid"].to_string());
     let project_parsed = parse_project(&v["project"].to_string());
     let tags_parsed = parse_tags(&v["tags"].to_string());
+    let end_parsed = parse_datetime(v["end"].to_string());
 
     let result = Task {
         description: v["description"].to_string(),
@@ -26,16 +27,24 @@ pub fn parse(data :&str) -> Option<Task> {
         status: v["status"].to_string(),
         uuid: uuid_parsed,
         wait: wait_parsed,
-        tags: tags_parsed
+        tags: tags_parsed,
+        end: end_parsed,
     };
     Some(result)
 }
 
+// TODO: Clean this up.  I failed with deserialization early in the project but things might be different now
+// TODO: Also make this more forgiving.  It should not just panic if it fails a parse
+// 2023-01-01T
 fn parse_datetime(mut data :String) -> Option<PrimitiveDateTime>{
-    data = data.replace("\"","");
+    data = (data.replace("\"","").trim()).to_string();
+    data = data.replace("-","");
+    data = data.replace(":","");
+    data = data.replace(".0","");
+    data = data.replace(" ","T");
     if data == "null" {return None;}
-    let year :i32 = data.substring(0,4).parse().unwrap_or_else(|_| panic!("invalid year {}",data));
-    let month_number :u8 = data.substring(4,6).parse().unwrap_or_else(|_| panic!("invalid month number in value: {}", data.substring(4,6)));
+    let year :i32 = data.substring(0,4).parse().unwrap_or_else(|_| panic!("invalid year number in value: {}: {}", data.substring(0,4), data));
+    let month_number :u8 = data.substring(4,6).parse().unwrap_or_else(|_| panic!("invalid month number in value: {}: {}", data.substring(4,6), data));
     let month = match month_number {
         1 => Month::January,
         2 => Month::February,
@@ -51,9 +60,9 @@ fn parse_datetime(mut data :String) -> Option<PrimitiveDateTime>{
         12 => Month::December,
         _ => panic!("invalid month number {}", month_number),
     };
-    let day :u8= data.substring(6,8).parse().unwrap();
-    let hour :u8 = data.substring(9,11).parse().unwrap();
-    let min :u8 = data.substring(11,13).parse().unwrap();
+    let day :u8= data.substring(6,8).parse().unwrap_or_else(|_| panic!("invalid day in value: {}: {}", data.substring(6,8), data));
+    let hour :u8 = data.substring(9,11).parse().unwrap_or_else(|_| panic!("invalid hour in value: {}: {}", data.substring(9,11), data));
+    let min :u8 = data.substring(11,13).parse().unwrap_or_else(|_| panic!("invalid min in value: {}: {}", data.substring(11,13), data));
     let sec :u8 = data.substring(13,15).parse().unwrap();
     let date = Date::from_calendar_date(year,month,day).unwrap();
     let time = Time::from_hms(hour, min, sec).unwrap();
@@ -80,11 +89,20 @@ fn parse_uuid(data :&str) -> String {
 }
 
 fn parse_project(data :&str) -> Vec<String> {
-    let data = data.split(".");
+    let mut data = data.replace("\"","");
+    data = data.replace("[", "");
+    data = data.replace("]", "");
+    let projects = if data.contains(".") {
+        data.split(".")
+    }
+    else {
+        data.split(",")
+    };
+
     let mut result :Vec<String> = Vec::new();
-    for str in data {
-        let str = str.replace("\"", "");
-        result.push(str.to_string())
+
+    for project in projects {
+        result.push(project.to_string());
     }
     result
 }
