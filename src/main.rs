@@ -38,50 +38,43 @@ use command::CommandResult;
 use task::Task;
 
 mod command;
-use command::Command;
 
 mod parser;
 
-use std::io;
 use std::fs;
 use std::path::Path;
 use std::env;
+use std::path::PathBuf;
 
+use clap::{arg, command, Command, value_parser};
+use anyhow::{Result, Error};
 
+fn main() {
+    let matches = command!() // imports package info from Cargo.toml
+        .subcommand(
+            Command::new("import")
+            .about("imports TaskWarrior JSON arrays")
+            .arg(arg!(
+                    <FILE> "path to taskwarrior export data"
+                    )
+                .required(true)
+                .value_parser(value_parser!(PathBuf))
+                )
+        )
+        .get_matches();
 
-
-//const TASK_COMPLETION_THRESHOLD_HIGH :f64 = 0.9;
-//const TASK_COMPLETION_THRESHOLD_LOW :f64 = 0.5;
-
-fn main() -> io::Result<()>{
-
-    let args :Vec<String> = env::args().collect();
-    let mut temp_cmd = "help";
-    if args.len() > 1 {
-        temp_cmd = &args[1];
-    }
-    let command = Command::from(temp_cmd.to_string());
-    
-    let mut params :Vec<&str> = Vec::new();
-    for i in 2..args.len() {
-        params.push(&args[i]);
-    }
-    let jsonpool :Vec<String> = Vec::new();
-    let taskpool :Vec<Task> = Vec::new();
-
-    let result = match command {
-        Command::Add => panic!("Command 'ADD' is not yet implemented."),
-        Command::Remove => panic!("Command 'REMOVE' is not yet implemented."),
-        Command::Modify => panic!("Command 'MODIFY' is not yet implemented."),
-        Command::Report => cmd_report(params),
-        Command::Import => cmd_import(params),
-        Command::Export => panic!("Command 'EXPORT' is not yet implemented."),
-        Command::Help => cmd_help(params),
-        Command::Version=> cmd_version(params),
-        Command::NotRecognized => cmd_not_recognized(params),
+    match matches.subcommand() {
+        Some(("import", sub_matches)) => {
+            cmd_import(sub_matches.get_one::<PathBuf>("FILE").expect("Path failed!"))
+        },
+        _ => unreachable!("WTF is this?")
     };
-    println!("{}",result.text);
-    Ok(())
+
+//      Command::Add => panic!("Command 'ADD' is not yet implemented."),
+//      Command::Remove => panic!("Command 'REMOVE' is not yet implemented."),
+//      Command::Modify => panic!("Command 'MODIFY' is not yet implemented."),
+//      Command::Report => cmd_report(params),
+//      Command::Export => panic!("Command 'EXPORT' is not yet implemented."),
 }
 
 const TEST_DATA_PATH_STR :&str = "./test_data/";
@@ -128,7 +121,7 @@ fn cmd_report(params :Vec<&str>) -> CommandResult {
     }
 
     else if report == "gtd" {
-        
+        filtered_tasks.append(&mut get_tasks_for_gtd_report(&tasks));          
     }
 
 
@@ -145,8 +138,15 @@ fn cmd_report(params :Vec<&str>) -> CommandResult {
     result
 }
 
+fn get_tasks_for_gtd_report(tasks :&Vec<Task>) -> Vec<Task> {
+    let mut result :Vec<Task> = Vec::new();
+    // TODO: Need a global list of all projects
+    panic!("Not Yet Implemented");
+    result
+}
+
 fn get_tasks_from_local() -> Vec<Task> {
-    let jsons = get_all_jsons_recursive(LOCAL_PATH).unwrap();
+    let jsons = get_all_jsons_recursive(LOCAL_PATH.into()).unwrap();
     let tasks = read_tasks_from_json(jsons).unwrap();
     tasks
 }
@@ -154,7 +154,6 @@ fn get_tasks_from_local() -> Vec<Task> {
 fn get_tasks_by_project(project :String, tasks:&Vec<Task>) -> Vec<Task> {
     let mut result :Vec<Task> = Vec::new();
     for task in tasks {
-        dbg!(&task.project);
         if task.project.contains(&project) {
             
             result.push(task.clone());
@@ -170,8 +169,8 @@ fn get_tasks_by_project(project :String, tasks:&Vec<Task>) -> Vec<Task> {
 /// &str -> CommandResult
 /// processes a given list of filepaths (recursively if directory) and imports any valid task jsons into our
 /// local file structure, and returns a l
-fn cmd_import(path :Vec<&str>) -> CommandResult {
-    let jsons = get_all_jsons_recursive(path[0]).unwrap();
+fn cmd_import(path :&PathBuf) -> CommandResult {
+    let jsons = get_all_jsons_recursive(path.to_path_buf()).unwrap();
     let tasks = read_tasks_from_json(jsons).unwrap();
 
     dbg!(tasks.len());
@@ -188,10 +187,10 @@ fn cmd_import(path :Vec<&str>) -> CommandResult {
     result
 }
 
-fn get_all_jsons_recursive(path :&str) -> Result<Vec<String>,&str> {
+fn get_all_jsons_recursive(path :PathBuf) -> Result<Vec<String>,Error> {
 
     let mut jsons :Vec<String> = Vec::new();
-    let mut new_jsons = load_jsons(path, &mut jsons).unwrap();
+    let mut new_jsons = load_jsons(&path, &mut jsons).unwrap();
     jsons.append(&mut new_jsons);
     
     Ok(jsons)
@@ -212,20 +211,18 @@ fn write_tasks_to_files(tasks :&Vec<Task>) -> Result<Vec<Task>,&'static str>{
 
 // 
 
-fn load_jsons(path :&str, jsonpool :&mut Vec<String>) -> Result<Vec<String>,&'static str>{
-    let path = Path::new(path);
+fn load_jsons(pathbuf :&PathBuf, jsonpool :&mut Vec<String>) -> Result<Vec<String>,Error>{
+    let path = Path::new(pathbuf);
     if path.is_dir() {
         for file in fs::read_dir(path).unwrap() {
             let file = file.unwrap();
             let path = &file.path();
-            //dbg!(path);
             if path.is_file() {
                 let json = fs::read_to_string(path).unwrap();
                 jsonpool.push(json);
-                //dbg!(jsonpool.len());
             }
             else{
-                load_jsons(path.to_str().unwrap(), jsonpool);
+                load_jsons(pathbuf, jsonpool);
             }
         }
     }
@@ -240,37 +237,5 @@ fn read_tasks_from_json<'a>(jsons :Vec<String>) -> Result<Vec<Task>, &'a str> {
         result.push(task);
     }
     Ok(result)
-}
-
-// Command: Version
-const VERSION_STR :&str = "TaskMaster v0.0.0alpha";
-
-fn cmd_version(_param :Vec<&str>) -> CommandResult {
-    let result = CommandResult{
-        tasks: vec![],
-        text: VERSION_STR.to_string() 
-    };
-    result
-}
-// Command: Not Recognized
-const NOT_RECOGNIZED_STR :&str = "Command not recognized.";
-
-fn cmd_not_recognized(_param :Vec<&str>) -> CommandResult {
-    let result = CommandResult{
-        tasks: vec![],
-        text: NOT_RECOGNIZED_STR.to_string() 
-    };
-    result
-}
-
-// Command: Help
-const HELP_STR :&str = "This is the help file.";
-
-fn cmd_help(_params :Vec<&str>) -> CommandResult {
-    let result = CommandResult{
-        tasks: vec![],
-        text: HELP_STR.to_string() 
-    };
-    result
 }
 
