@@ -1,26 +1,26 @@
+use serde::{Deserialize, Serialize};
+use std::fs;
 use substring::Substring;
 use time::PrimitiveDateTime;
-use std::fs;
-use serde::{Deserialize, Serialize};
 
-#[derive(Serialize,Deserialize,Debug,Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Task {
-    pub(crate) uuid :String,
-    pub(crate) description :String,
-    pub(crate) tags :Vec<String>,
-    pub(crate) mask :String,
-    pub(crate) modified :Option<PrimitiveDateTime>,
-    pub(crate) project :Vec<String>,
-    pub(crate) rtype :String,
-    pub(crate) recur :String,
+    pub(crate) uuid: String,
+    pub(crate) description: String,
+    pub(crate) tags: Vec<String>,
+    pub(crate) mask: String,
+    pub(crate) modified: Option<PrimitiveDateTime>,
+    pub(crate) project: Vec<String>,
+    pub(crate) rtype: String,
+    pub(crate) recur: String,
     pub(crate) status: String,
-    pub(crate) entry :Option<PrimitiveDateTime>,
-    pub(crate) wait :Option<PrimitiveDateTime>,
-    pub(crate) scheduled:Option<PrimitiveDateTime>,
-    pub(crate) start : Option<PrimitiveDateTime>,
-    pub(crate) due :Option<PrimitiveDateTime>,
-    pub(crate) until :Option<PrimitiveDateTime>,
-    pub(crate) end :Option<PrimitiveDateTime>,
+    pub(crate) entry: Option<PrimitiveDateTime>,
+    pub(crate) wait: Option<PrimitiveDateTime>,
+    pub(crate) scheduled: Option<PrimitiveDateTime>,
+    pub(crate) start: Option<PrimitiveDateTime>,
+    pub(crate) due: Option<PrimitiveDateTime>,
+    pub(crate) until: Option<PrimitiveDateTime>,
+    pub(crate) end: Option<PrimitiveDateTime>,
 }
 
 impl Task {
@@ -29,12 +29,11 @@ impl Task {
         let fullpath = folderpath.to_owned() + &self.uuid + ".json";
         let json = serde_json::to_string(&self).unwrap();
         fs::write(fullpath, json);
-        
-   }
+    }
     fn create_folder(&self) -> String {
         let mut builder = fs::DirBuilder::new();
         builder.recursive(true);
-        
+
         let mut path = "./pages/".to_string();
         for level in &self.project {
             path += level;
@@ -45,9 +44,7 @@ impl Task {
         path
     }
 
-
     pub fn format_for_report(&self) -> String {
-
         let uuid = &format_uuid(&self.uuid);
         let description = &format_description(&self.description);
         let status = &self.status;
@@ -79,17 +76,17 @@ impl Task {
     }
 }
 
-const REPORT_SEPARATOR :&str = " | ";
+const REPORT_SEPARATOR: &str = " | ";
 
-fn format_uuid(uuid :&str) -> String {
-    uuid.to_string().substring(0,8).to_string()
+fn format_uuid(uuid: &str) -> String {
+    uuid.to_string().substring(0, 8).to_string()
 }
 
-fn format_description(desc :&str) -> String {
+fn format_description(desc: &str) -> String {
     desc.replace("\"", "").replace("\\", "")
 }
 
-fn format_date(date :&Option<PrimitiveDateTime>) -> String {
+fn format_date(date: &Option<PrimitiveDateTime>) -> String {
     if date.is_none() {
         return "No Data".to_string();
     }
@@ -97,7 +94,7 @@ fn format_date(date :&Option<PrimitiveDateTime>) -> String {
     date.to_string()
 }
 
-pub const EXAMPLE_0 :&str = r#"
+pub const EXAMPLE_0: &str = r#"
     {
         "description":"AM Check-In",
         "due":"20230821T160000Z",
@@ -114,7 +111,7 @@ pub const EXAMPLE_0 :&str = r#"
     }
     "#;
 
-pub const EXAMPLE_1 :&str = r#"
+pub const EXAMPLE_1: &str = r#"
     {
         "description":"AM Check-In",
         "due":"20230821T160000Z",
@@ -130,8 +127,6 @@ pub const EXAMPLE_1 :&str = r#"
         "tags":["am","daily"]
     }
     "#;
-
-
 
 // TODO: implement new()
 // TODO: implement get_by_uuid()

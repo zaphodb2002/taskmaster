@@ -1,4 +1,4 @@
-use crate::task::Task;
+use crate::{task::Task, taskpool::TaskPool};
 
 pub enum Command {
     Add,
@@ -13,7 +13,7 @@ pub enum Command {
 }
 
 impl Command {
-    pub(crate) fn from(str :String) -> Command {
+    pub(crate) fn from(str: String) -> Command {
         match str.as_str() {
             "add" => Command::Add,
             "remove" => Command::Remove,
@@ -29,6 +29,6 @@ impl Command {
 }
 
 pub struct CommandResult {
-    pub tasks: Vec<Task>,
-    pub text: String
+    pub tasks: TaskPool,
+    pub text: Vec<String>,
 }
