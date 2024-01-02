@@ -1,1 +1,0 @@
-{"description":"Audit Subsistence.Hygiene recurring tasks","due":"20230828T160000Z","entry":"20230824T154346Z","mask":"+X+-","modified":"20231027T205333Z","priority":"M","project":"LMS.Process.Auditing","recur":"1mo","rtype":"periodic","status":"recurring","uuid":"47ba56d0-7837-4c8a-b233-f149cac9d1e9","wait":"20230731T140000Z","tags":["am","audit","monthly","task"]}

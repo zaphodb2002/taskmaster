@@ -1,1 +1,0 @@
-{"description":"make sure tasks are coming out of wait at least 2h before they're due","due":"20230901T065900Z","end":"20230830T225531Z","entry":"20230830T180547Z","modified":"20230830T225531Z","project":"LMS.Tools.TaskWarrior","status":"completed","uuid":"bef3df3a-56e0-4a3c-b7a0-dbb22f8dd5f4","tags":["bug"]}

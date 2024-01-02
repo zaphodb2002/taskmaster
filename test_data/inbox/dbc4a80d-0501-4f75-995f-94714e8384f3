@@ -1,1 +1,0 @@
-{"description":"Fill CPAP Reservoir","due":"20230827T160000Z","entry":"20230822T203729Z","mask":"X++X++++++-","modified":"20231031T041909Z","priority":"M","project":"Subsistence.Sleep","recur":"7d","rtype":"periodic","status":"recurring","uuid":"dbc4a80d-0501-4f75-995f-94714e8384f3","wait":"20230821T140000Z","tags":["am","task","weekly"]}
