@@ -1,18 +1,30 @@
 mod sync;
-mod taskpool;
-use sync::TWSync;
-use anyhow::{Result};
-use clap::{arg, command, value_parser, Command};
-use task_hookrs::{import::import, task::{Task, TW26}};
+use std::path::Path;
 
-const MD_FILE_ROOT :&str = "/home/zaphod/Documents/Test/";
+use sync::TWSync;
+
+mod task;
+use crate::task::Task;
+
+use anyhow::Result;
+use clap::{arg, command, Command};
+
 const JSON_INBOX :&str = "/home/zaphod/.task/inbox/";
 const JSON_OUTBOX :&str ="/home/zaphod/.task/outbox/";
 
 fn main() {
-////////
-// Input
-    let matches = command!() // imports package info from Cargo.toml
+    let matches = match_input();
+    process_cmd(matches);
+   
+/////////
+// Output
+    //for line in cmd_result.text {
+    //    println!("{}", line);
+    //}
+}
+
+fn match_input() -> clap::ArgMatches {
+     command!() // imports package info from Cargo.toml
         .subcommand(
             Command::new("import")
                 .about("imports TaskWarrior JSON arrays"),
@@ -26,21 +38,25 @@ fn main() {
                 .about("outputs a report of tasks")
                 .arg(arg!(<REPORT> "Report format to output"))
         )
-        .get_matches();
-///////////
-// Process
-    let cmd_result = match matches.subcommand() {
-        Some(("import", sub_matches)) => cmd_import(),
+        .get_matches()
+
+}
+
+fn process_cmd(matches :clap::ArgMatches){
+    let _ = match matches.subcommand() {
+        Some(("import", _submatches)) => cmd_import(),
+        Some(("export", _submatches)) => cmd_export(),
         _ => unreachable!("WTF is this?"),
     };
-/////////
-// Output
-    //for line in cmd_result.text {
-    //    println!("{}", line);
-    //}
 }
 
 fn cmd_import() -> Result<Vec<Task>> {
-    let tasks = TWSync::import(JSON_INBOX.into())?;
+    let path :String = JSON_INBOX.to_string();
+    let tasks = TWSync::import(path)?;
+    Ok(tasks)
+}
+
+fn cmd_export() -> Result<Vec<Task>> {
+    let tasks = TWSync::export(JSON_OUTBOX.into())?;
     Ok(tasks)
 }

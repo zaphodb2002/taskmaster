@@ -1,62 +1,121 @@
-use std::{path::PathBuf, fs::{File}, io::BufReader};
+use crate::Task;
+use std::{fs::{File,  self, OpenOptions}, io::Write};
 use anyhow::Result;
-use task_hookrs::{task::{Task, TW26}, import::import};
+use task_hookrs::{task::TW26, import::import_task};
 use walkdir::{WalkDir, DirEntry};
+use serde_json;
+
+const MD_FILE_ROOT :&str = "/home/zaphod/Documents/Test/";
 
 pub struct TWSync {
-
+    
 }
 
 impl TWSync {
-    pub fn import(path :PathBuf) -> Result<Vec<Task>>{
-        let dir_tree = get_dir_entries_recursively(path)?;
-        let tasks :Vec<Task> = Vec::new();
+    pub fn import(path :String) -> Result<Vec<Task>>{
+
+        let dir_tree = get_dir_entries_recursively(&path)?;
+        let mut tasks :Vec<Task> = Vec::new();
         
         for entry in &dir_tree {
+            dbg!(entry);
             if entry.clone().into_path().is_file() {
-                let _ = write_md_file_for_task(entry.clone());
+                let task = read_from_md_file(entry.clone())?;
+                tasks.push(task);
             }
+        }
+
+        for task in &tasks {
+            if md_needs_update(&task) {
+                 let md :File = write_md_file_for_task(&task)?;
+            }
+        }
+        Ok(tasks)
+    }
+
+    pub fn export(path :&str) -> Result<Vec<Task>> {
+        let dir_tree = get_dir_entries_recursively(MD_FILE_ROOT)?;
+        let mut tasks :Vec<Task> = Vec::new();
+        dir_tree.iter().for_each(|entry| {
+            let task = read_from_md_file(entry.clone()).unwrap();
+            if entry.path().is_file() {
+               tasks.push(task);
+            }
+        });
+        for task in &tasks {
+            let json = &convert_to_json(task)?;
+            let filename = path.to_string() + &task.uuid() + ".json";
+            
+            let mut file = File::create(filename)?;
+            file.write_all(json.as_bytes())?;   
         }
 
         Ok(tasks)
     }
 }
 
-fn write_md_file_for_task(entry: DirEntry) -> Result<()> {
-    let file = File::open(entry.path())?;
-    let tasks = import::<TW26, File>(file);
-    Ok(())
+fn convert_to_toml(task :&Task) -> Result<String> {
+    let result = toml::to_string(task)?;
+    Ok(result)
 }
 
-fn get_dir_entries_recursively(path :PathBuf) -> Result<Vec<DirEntry>> {
-    let mut result :Vec<DirEntry> = Vec::new();
+fn convert_to_json(task :&Task) -> Result<String> {
+    let result = serde_json::to_string(task)?;
+    Ok(result)
+}
+
+fn md_needs_update(task :&Task) -> bool {
+    true
+}
+
+fn read_from_md_file(entry: DirEntry) -> Result<Task> {
+    let json = fs::read_to_string(entry.path())?;
+    let tw26 = import_task::<TW26>(&json)?;
+    let task = Task::new(tw26);
+    Ok(task)
+}
+
+fn write_md_file_for_task(task :&Task) -> Result<File> {
+    let result = create_or_open_md_file(task)?;
+    Ok(result)
+}
+
+fn create_md_folder(task: &Task) -> Result<String> {
+    let mut builder = fs::DirBuilder::new();
+    builder.recursive(true);
     
-    let entries =WalkDir::new(path);
-    
-    for entry in entries {
-        result.push(entry?);
+    let mut path = MD_FILE_ROOT.to_string();
+    let project_raw = task.project();
+    let project = project_raw.split(".");
+    for level in project {
+        path += level;
+        path += "/";
     }
 
-    Ok(result)
+    let _ = builder.create(path.clone());
+    Ok(path)
 }
 
-fn get_dirs(path :PathBuf) -> Result<Vec<DirEntry>> {
-    let mut result :Vec<DirEntry> = Vec::new();
-    let dirs = get_dir_entries_recursively(path);
+fn create_or_open_md_file(task :&Task) -> Result<File> {
+    let mut path = create_md_folder(task)?;
+    let filename = task.uuid() + ".md";
+    path += &filename;
 
-    dbg!(&dirs);
-    Ok(result)
+    let file = OpenOptions::new()
+                .write(true)
+                .create(true)
+                .open(path)?;
 
+    Ok(file)
 }
 
-//fn get_files(path :PathBuf) -> Result<Vec<DirEntry>> {
-    
-//    let files :Vec<_> = get_dir_entries_recursively(path).into_iter().filter(|e| {
-//        e.as_ref().unwrap().path().is_file()
-//    }).collect();
 
-//}
-
-
-
+fn get_dir_entries_recursively(path :&str) -> Result<Vec<DirEntry>> {
+    let entries = WalkDir::new(&path).into_iter()
+                        .map(|r| r.unwrap())
+                        .filter(|entry| {
+                        entry.path().is_file()
+                    }).collect();
+    Ok(entries)
+}
 
