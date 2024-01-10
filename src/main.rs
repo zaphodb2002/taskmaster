@@ -1,5 +1,6 @@
 mod sync;
-use std::path::Path;
+mod report;
+use crate::report::Report;
 
 use sync::TWSync;
 
@@ -14,13 +15,11 @@ const JSON_OUTBOX :&str ="/home/zaphod/.task/outbox/";
 
 fn main() {
     let matches = match_input();
-    process_cmd(matches);
+    let result = process_cmd(matches);
    
 /////////
 // Output
-    //for line in cmd_result.text {
-    //    println!("{}", line);
-    //}
+    println!("{}",result.unwrap());
 }
 
 fn match_input() -> clap::ArgMatches {
@@ -36,27 +35,36 @@ fn match_input() -> clap::ArgMatches {
         .subcommand(
             Command::new("report")
                 .about("outputs a report of tasks")
-                .arg(arg!(<REPORT> "Report format to output"))
+//              .arg(arg!(<REPORT> "Report format to output"))
         )
         .get_matches()
 
 }
 
-fn process_cmd(matches :clap::ArgMatches){
-    let _ = match matches.subcommand() {
+fn process_cmd(matches :clap::ArgMatches) -> Result<String>{
+    match matches.subcommand() {
         Some(("import", _submatches)) => cmd_import(),
         Some(("export", _submatches)) => cmd_export(),
+        Some(("report", _submatches)) => cmd_report(),
         _ => unreachable!("WTF is this?"),
-    };
+    }
 }
 
-fn cmd_import() -> Result<Vec<Task>> {
-    let path :String = JSON_INBOX.to_string();
-    let tasks = TWSync::import(path)?;
-    Ok(tasks)
+fn cmd_import() -> Result<String> {
+    let tasks = TWSync::import(JSON_INBOX.into())?;
+    let result = Report::import(tasks);
+    Ok(result)
 }
 
-fn cmd_export() -> Result<Vec<Task>> {
+fn cmd_export() -> Result<String> {
     let tasks = TWSync::export(JSON_OUTBOX.into())?;
-    Ok(tasks)
+    dbg!(&tasks);
+    let result = Report::export(tasks);
+    Ok(result)
+}
+
+fn cmd_report() -> Result<String> {
+    let report = Report::full()?;
+    Ok(report.to_string())
+
 }
