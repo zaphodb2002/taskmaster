@@ -1,1 +1,0 @@
-{"description":"Audit Subsistence.Emotion recurring tasks","due":"20230828T160000Z","entry":"20230824T154409Z","mask":"+X+-","modified":"20231027T205333Z","priority":"M","project":"LMS.Process.Auditing","recur":"1mo","rtype":"periodic","status":"recurring","uuid":"895d4e44-3ff2-477f-84cb-8f44466e1b69","wait":"20230731T140000Z","tags":["am","audit","monthly","task"]}

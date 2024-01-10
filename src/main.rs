@@ -1,86 +1,70 @@
-mod task;
-mod taskpool;
+mod sync;
 mod report;
-use report::Report;
-use taskpool::TaskPool;
-use command::CommandResult;
-use task::Task;
+use crate::report::Report;
 
-mod command;
+use sync::TWSync;
 
-mod parser;
+mod task;
+use crate::task::Task;
 
-use std::{env, path::PathBuf};
+use anyhow::Result;
+use clap::{arg, command, Command};
 
-use anyhow::{Error, Result};
-use clap::{arg, command, value_parser, Command};
+const JSON_INBOX :&str = "/home/zaphod/.task/inbox/";
+const JSON_OUTBOX :&str ="/home/zaphod/.task/outbox/";
 
 fn main() {
-////////
-// Input
-    let matches = command!() // imports package info from Cargo.toml
+    let matches = match_input();
+    let result = process_cmd(matches);
+   
+/////////
+// Output
+    println!("{}",result.unwrap());
+}
+
+fn match_input() -> clap::ArgMatches {
+     command!() // imports package info from Cargo.toml
         .subcommand(
             Command::new("import")
-                .about("imports TaskWarrior JSON arrays")
-                .arg(
-                    arg!(
-                    <FILE> "path to taskwarrior export data"
-                    )
-                    .value_parser(value_parser!(PathBuf)),
-                ),
+                .about("imports TaskWarrior JSON arrays"),
         )
+        .subcommand(
+            Command::new("export")
+                .about("exports TaskWarrior JSON arrays")
+            )
         .subcommand(
             Command::new("report")
                 .about("outputs a report of tasks")
-                .arg(arg!(<REPORT> "Report format to output"))
+//              .arg(arg!(<REPORT> "Report format to output"))
         )
-        .get_matches();
-///////////
-// Process
-    let cmd_result = match matches.subcommand() {
-        Some(("import", sub_matches)) => cmd_import(
-            sub_matches
-                .get_one::<PathBuf>("FILE")
-                .expect("Path failed!"),
-        ),
-        Some(("report", sub_matches)) => cmd_report(
-            sub_matches
-                .get_one::<String>("REPORT")
-                .expect("This is required so it should work?")
-            ),
+        .get_matches()
+
+}
+
+fn process_cmd(matches :clap::ArgMatches) -> Result<String>{
+    match matches.subcommand() {
+        Some(("import", _submatches)) => cmd_import(),
+        Some(("export", _submatches)) => cmd_export(),
+        Some(("report", _submatches)) => cmd_report(),
         _ => unreachable!("WTF is this?"),
-    };
-/////////
-// Output
-    for line in cmd_result.text {
-        println!("{}", line);
     }
-    //      Command::Add => panic!("Command 'ADD' is not yet implemented."),
-    //      Command::Remove => panic!("Command 'REMOVE' is not yet implemented."),
-    //      Command::Modify => panic!("Command 'MODIFY' is not yet implemented."),
-    //      Command::Report => cmd_report(params),
-    //      Command::Export => panic!("Command 'EXPORT' is not yet implemented."),
 }
 
-fn cmd_report(report_type:&str) -> CommandResult {
-    let report = match report_type {
-        "gtd" => Report::gtd(),
-        _ => panic!("bad report name")
-    };
-    let result = CommandResult {
-        tasks: report.taskpool.clone(),
-        text: report.format()
-    };
-
-    result
+fn cmd_import() -> Result<String> {
+    let tasks = TWSync::import(JSON_INBOX.into())?;
+    let result = Report::import(tasks);
+    Ok(result)
 }
 
-fn cmd_import(path: &PathBuf) -> CommandResult {
+fn cmd_export() -> Result<String> {
+    let tasks = TWSync::export(JSON_OUTBOX.into())?;
+    dbg!(&tasks);
+    let result = Report::export(tasks);
+    Ok(result)
+}
 
-    let result = CommandResult {
-        tasks: TaskPool::import(path.to_path_buf()),
-        text: vec!("Tasks imported".to_string()),
-    };
+fn cmd_report() -> Result<String> {
+    let report = Report::full()?;
+    Ok(report.to_string())
 
-    result
 }
