@@ -54,18 +54,22 @@ impl TWSync {
         dir_tree.iter().for_each(|entry| {
             let path = &entry.path();
             let name = path.file_name().expect("no name?");
-            if path.is_file(){
+            if path.is_file() && name.to_str().unwrap().contains("json"){
                 if path.metadata().expect("bad metadata?").len() > 0 {
-                    let task = read_from_md_file(entry.clone()).unwrap();
+                    let task = read_from_json_file(entry);
                         if entry.path().is_file() {
-                    tasks.push(task);
+                    tasks.push(
+                        task.expect(
+                            &format!("bad task? {}", path.display())
+                                    )
+                            );
                     }
                 }
             } 
-        });
+            });
         for task in &tasks {
             let json = &convert_to_json(task)?;
-            let filename = path.to_string() + &task.uuid() + ".json";
+            let filename = path.to_string() + &task.uuid()? + ".json";
             
             let mut file = File::create(filename)?;
             file.write_all(json.as_bytes())?;   
@@ -97,10 +101,7 @@ fn toml_needs_update(task :&Task) -> bool {
     true
 }
 fn read_from_md_file(entry: DirEntry) -> Result<Task> {
-    let md = fs::read_to_string(entry.path())?;
-    let tw26 = import_task::<TW26>(&md)?;
-    let task = Task::new(tw26);
-    Ok(task)
+    todo!()
 }
 
 fn read_from_json_file(entry: &DirEntry) -> Result<Task> {
@@ -111,10 +112,7 @@ fn read_from_json_file(entry: &DirEntry) -> Result<Task> {
 }
 
 fn read_from_toml_file(entry: DirEntry) -> Result<Task> {
-    let toml = fs::read_to_string(entry.path())?;
-    let tw26 = import_task::<TW26>(&toml)?;
-    let task = Task::new(tw26);
-    Ok(task)
+    todo!()
 }
 
 fn write_md_file_for_task(task :&Task) -> Result<File> {
@@ -138,7 +136,7 @@ fn create_md_folder(task: &Task) -> Result<String> {
     builder.recursive(true);
     
     let mut path = MD_FILE_ROOT.to_string();
-    let project_raw = task.project();
+    let project_raw = task.project()?;
     let project = project_raw.split(".");
     for level in project {
         path += level;
@@ -151,19 +149,21 @@ fn create_md_folder(task: &Task) -> Result<String> {
 
 fn create_or_open_md_file(task :&Task) -> Result<File> {
     let mut path = create_md_folder(task)?;
-    let filename = task.uuid() + ".md";
+    let filename = format!("{}.md",task.uuid()?);
     path += &filename;
 
-    let file = OpenOptions::new()
+    let mut file = OpenOptions::new()
                 .write(true)
                 .create(true)
                 .open(path)?;
 
+    let content = task.to_md();
+    let _ = file.write_all(&content?.into_bytes())?;
     Ok(file)
 }
 fn create_or_open_json_file(task :&Task) -> Result<File> {
     let mut path = create_md_folder(task)?;
-    let filename = task.uuid() + ".json";
+    let filename = format!("{}.json",task.uuid()?);
     path += &filename;
 
     let mut file = OpenOptions::new()
@@ -179,7 +179,7 @@ fn create_or_open_json_file(task :&Task) -> Result<File> {
 
 fn create_or_open_toml_file(task :&Task) -> Result<File> {
     let mut path = create_md_folder(task)?;
-    let filename = task.uuid() + ".toml";
+    let filename = task.uuid()? + ".toml";
     path += &filename;
 
     let file = OpenOptions::new()

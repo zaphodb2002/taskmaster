@@ -17,7 +17,7 @@ impl Report {
     pub(crate) fn import(tasks: Vec<Task>) -> String {
         let mut strings :Vec<String> = Vec::new();
         tasks.iter().for_each(|task|{
-            strings.push(format!("{} imported", task.uuid()));
+            strings.push(format!("{} imported", task.uuid().unwrap()));
         });
         
         strings.join("\n")
@@ -26,8 +26,7 @@ impl Report {
     pub(crate) fn export(tasks: Vec<Task>) -> String {
         let mut strings :Vec<String> = Vec::new();
         tasks.iter().for_each(|task|{
-            dbg!(&task);
-            strings.push(format!("{} exported", task.uuid()));
+            strings.push(format!("{} exported", task.uuid().unwrap()));
         });
         
         strings.join("\n")

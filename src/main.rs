@@ -58,7 +58,6 @@ fn cmd_import() -> Result<String> {
 
 fn cmd_export() -> Result<String> {
     let tasks = TWSync::export(JSON_OUTBOX.into())?;
-    dbg!(&tasks);
     let result = Report::export(tasks);
     Ok(result)
 }
