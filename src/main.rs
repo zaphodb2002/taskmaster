@@ -1,47 +1,43 @@
 mod sync;
-mod report;
-use crate::report::Report;
-
-use sync::TWSync;
+use crate::sync::{
+    local_data::{LocalData, MD_FILE_ROOT},
+    Export, Import,
+};
 
 mod task;
 use crate::task::Task;
 
+mod report;
+use crate::report::Report;
+
 use anyhow::Result;
 use clap::{arg, command, Command};
+use sync::tw_sync::TWSync;
 
-const JSON_INBOX :&str = "/home/zaphod/.task/inbox/";
-const JSON_OUTBOX :&str ="/home/zaphod/.task/outbox/";
+const TW_PATH: &str = "/home/zaphod/.task";
 
 fn main() {
     let matches = match_input();
     let result = process_cmd(matches);
-   
-/////////
-// Output
-    println!("{}",result.unwrap());
+
+    /////////
+    // Output
+    println!("{}", result.unwrap());
 }
 
 fn match_input() -> clap::ArgMatches {
-     command!() // imports package info from Cargo.toml
-        .subcommand(
-            Command::new("import")
-                .about("imports TaskWarrior JSON arrays"),
-        )
-        .subcommand(
-            Command::new("export")
-                .about("exports TaskWarrior JSON arrays")
-            )
+    command!() // imports package info from Cargo.toml
+        .subcommand(Command::new("import").about("imports TaskWarrior JSON arrays"))
+        .subcommand(Command::new("export").about("exports TaskWarrior JSON arrays"))
         .subcommand(
             Command::new("report")
                 .about("outputs a report of tasks")
-//              .arg(arg!(<REPORT> "Report format to output"))
+                .arg(arg!(<REPORT> "Report format to output")),
         )
         .get_matches()
-
 }
 
-fn process_cmd(matches :clap::ArgMatches) -> Result<String>{
+fn process_cmd(matches: clap::ArgMatches) -> Result<String> {
     match matches.subcommand() {
         Some(("import", _submatches)) => cmd_import(),
         Some(("export", _submatches)) => cmd_export(),
@@ -51,19 +47,20 @@ fn process_cmd(matches :clap::ArgMatches) -> Result<String>{
 }
 
 fn cmd_import() -> Result<String> {
-    let tasks = TWSync::import(JSON_INBOX.into())?;
+    let local_data = LocalData::new(MD_FILE_ROOT.into())?;
+    let tasks = TWSync::new(TW_PATH.into()).import(local_data)?;
     let result = Report::import(tasks);
     Ok(result)
 }
 
 fn cmd_export() -> Result<String> {
-    let tasks = TWSync::export(JSON_OUTBOX.into())?;
+    let _local_data = LocalData::new(MD_FILE_ROOT.into());
+    let tasks = TWSync::new(TW_PATH.into()).export()?;
     let result = Report::export(tasks);
     Ok(result)
 }
 
 fn cmd_report() -> Result<String> {
-    let report = Report::full()?;
-    Ok(report.to_string())
-
+    let report = Report::gtd()?;
+    Ok(report.display())
 }
