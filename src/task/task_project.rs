@@ -2,7 +2,7 @@ use anyhow::Result;
 
 use crate::task::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Clone,Deserialize, Serialize, Debug)]
 pub struct TaskProject {
     campaign: String,
     aspect: Option<String>,
@@ -48,5 +48,9 @@ impl TaskProject {
 
         Ok(TaskProject::new(campaign, aspect, project, subproject))
         
+    }
+
+    pub(crate) fn campaign(&self) -> &str {
+        &self.campaign
     }
 }

@@ -1,3 +1,5 @@
+mod templates;
+
 use super::*;
 use anyhow::Result;
 

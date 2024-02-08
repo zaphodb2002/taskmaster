@@ -11,7 +11,7 @@ mod report;
 use crate::report::Report;
 
 use anyhow::Result;
-use clap::{arg, command, Command};
+use clap::{arg, command, Arg, Command};
 use sync::tw_sync::TWSync;
 
 const TW_PATH: &str = "/home/zaphod/.task";
@@ -32,16 +32,18 @@ fn match_input() -> clap::ArgMatches {
         .subcommand(
             Command::new("report")
                 .about("outputs a report of tasks")
-                .arg(arg!(<REPORT> "Report format to output")),
+                .arg(Arg::new("report_name")
+                    .default_value("gtd")
+                )
         )
         .get_matches()
 }
 
 fn process_cmd(matches: clap::ArgMatches) -> Result<String> {
     match matches.subcommand() {
-        Some(("import", _submatches)) => cmd_import(),
-        Some(("export", _submatches)) => cmd_export(),
-        Some(("report", _submatches)) => cmd_report(),
+        Some(("import", _)) => cmd_import(),
+        Some(("export", _)) => cmd_export(),
+        Some(("report", submatches)) => cmd_report(submatches.clone()),
         _ => unreachable!("WTF is this?"),
     }
 }
@@ -60,7 +62,16 @@ fn cmd_export() -> Result<String> {
     Ok(result)
 }
 
-fn cmd_report() -> Result<String> {
-    let report = Report::gtd()?;
-    Ok(report.display())
+fn cmd_report(args :clap::ArgMatches) -> Result<String> {
+    let arg = args.get_one::<String>("report_name").expect("No report specified").to_owned();
+    let report = match arg.as_str() {
+        "gtd" => Some(Report::gtd()?),
+        &_ => None
+    };
+
+    if report.is_none() {
+        return Ok("No report specified".to_string());
+    }
+
+    Ok(report.unwrap().display())
 }

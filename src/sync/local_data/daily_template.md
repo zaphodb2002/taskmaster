@@ -1,16 +1,16 @@
-# %% Today().DateString($Y $W $a) %%
+# {{title}}
 
 << Previous | | Next >>
 
 ## CheckIns
 ### AM
-%% Today().AMTasks($desc) %%
+{{am}}
 ### Lunch
-%% Today().LunchTasks($desc) %%
+{{lunch}}
 ### PM
-%% Today().PMTasks($desc) %%
+{{pm}}
 ### Evening
-%% Today().EveningTasks($desc) %%
+{{evening}}
 
 ## GTD
 ### %% Campaign0($name) %%

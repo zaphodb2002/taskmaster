@@ -14,17 +14,39 @@ pub struct Report {
 
 impl Report {
     pub fn gtd() -> Result<Report> {
-        let tasks = LocalData::new(MD_FILE_ROOT.into())?.tasks;
+        let all :Vec<Task> = LocalData::new(MD_FILE_ROOT.into())?.tasks
+            .into_iter()
+            .filter(|task| task.status() == "Pending")
+            .collect();
+        
+        let mut campaigns :Vec<&str> = all.iter()
+            .map(|task| task.project().campaign())
+            .collect();
+        campaigns.sort();
+        campaigns.dedup();
+        
+        let mut tasks :Vec<Task> = Vec::new();
+
+        campaigns.into_iter().for_each(|campaign| {
+            let new_task = all.iter()
+                .filter(|task| task.project().campaign() == campaign)
+                .nth(0).unwrap();
+            tasks.push(new_task.clone());
+        });
+
 
         let result = Report {
             title: "Getting Things Done".into(),
             tasks,
-            columns: vec!["uuid".into(), "status".into()],
+            columns: vec![
+                "description".into(), 
+                "status".into()
+            ],
         };
 
         Ok(result)
     }
-
+    
     pub(crate) fn import(tasks: Vec<Task>) -> String {
         let mut strings: Vec<String> = Vec::new();
         tasks.iter().for_each(|task| {

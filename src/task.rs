@@ -8,16 +8,18 @@ use task_field::*;
 mod task_project;
 use task_project::*;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Task {
     uuid: TaskFieldString,
     status: TaskFieldString,
     description: TaskFieldString,
     project: TaskFieldProject,
+    entry: TaskFieldDate,
     wait: TaskFieldDate,
     scheduled: TaskFieldDate,
     due: TaskFieldDate,
     until: TaskFieldDate,
+    end: TaskFieldDate,
 }
 
 impl PartialEq for Task {
@@ -78,10 +80,12 @@ impl Task {
                 TaskFieldName::Project,
                 TaskProject::from_string(tw26.project().expect("Bad project").to_string())?,
             ),
+            entry: TaskFieldDate::new(TaskFieldName::Entry, Some(tw26.entry().to_owned())),
             wait: TaskFieldDate::new(TaskFieldName::Wait, tw26.wait().cloned()),
             scheduled: TaskFieldDate::new(TaskFieldName::Scheduled, tw26.scheduled().cloned()),
             due: TaskFieldDate::new(TaskFieldName::Due, tw26.due().cloned()),
             until: TaskFieldDate::new(TaskFieldName::Until, tw26.until().cloned()),
+            end: TaskFieldDate::new(TaskFieldName::End, tw26.end().cloned())
         })
     }
 

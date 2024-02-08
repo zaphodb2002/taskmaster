@@ -66,9 +66,17 @@ fn get_files_from_dir_tree(dir_tree: Vec<DirEntry>) -> Vec<DirEntry> {
 fn read_from_file(path: PathBuf) -> Option<Task> {
     let extension = path.extension();
     if extension == Some(OsStr::new("json")) {
-        return Some(read_from_json(path).unwrap());
+        let json = read_from_json(path.clone());
+        if json.is_err(){
+            return None;
+        }
+        return Some(json.expect(path.to_str()?));   
     } else if extension == Some(OsStr::new("toml")) {
-        return Some(read_from_toml(path).unwrap());
+        let toml = read_from_toml(path.clone());
+        if toml.is_err(){
+            return None;
+        }
+        return Some(toml.expect(path.to_str()?));
     } else {
         None
     }

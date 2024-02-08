@@ -5,7 +5,7 @@ use crate::task::{Deserialize, Serialize};
 
 pub trait IsTaskField {}
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Clone,Deserialize, Serialize, Debug)]
 pub struct TaskFieldString {
     field_name: TaskFieldName,
     value: Option<String>,
@@ -29,7 +29,7 @@ impl TaskFieldString {
         }
     }
 }
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Clone,Deserialize, Serialize, Debug)]
 pub struct TaskFieldDate {
     field_name: TaskFieldName,
     value: Option<Date>,
@@ -45,7 +45,7 @@ impl TaskFieldDate {
         self.value.clone()
     }
 }
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Clone,Deserialize, Serialize, Debug)]
 pub struct TaskFieldProject {
     field_name: TaskFieldName,
     value: TaskProject,
@@ -60,14 +60,17 @@ impl TaskFieldProject {
         &self.value
     }
 }
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Clone,Deserialize, Serialize, Debug)]
 pub enum TaskFieldName {
     UUID,
     Status,
     Description,
     Project,
+    Entry,
     Wait,
     Scheduled,
     Due,
     Until,
+    End,
+    Urgency
 }
